@@ -37,7 +37,6 @@ namespace detail {
 	void LoadString(catalogue::TransportCatalogue& catalogue, std::istream& input);
 }
 
-
 namespace string_parser {
 	namespace write {
 		void stop(commands::Command<commands::WriteCommand> command, catalogue::TransportCatalogue& catalogue);

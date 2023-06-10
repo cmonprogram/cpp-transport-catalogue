@@ -38,7 +38,7 @@ namespace detail {
 
 namespace string_parser {
 	namespace read {
-		void stop(commands::Command<commands::ReadCommand> command, catalogue::TransportCatalogue& catalogue);
-		void bus(commands::Command<commands::ReadCommand> command, catalogue::TransportCatalogue& catalogue);
+		void stop(const commands::Command<commands::ReadCommand>& command, catalogue::TransportCatalogue& catalogue, std::ostream& stream);
+		void bus(const commands::Command<commands::ReadCommand>& command, catalogue::TransportCatalogue& catalogue, std::ostream& stream);
 	}
 }

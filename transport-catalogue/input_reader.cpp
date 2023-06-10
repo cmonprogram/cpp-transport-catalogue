@@ -1,4 +1,4 @@
-#include "input_reader.h"
+#include "stat_reader.h"
 
 void string_parser::write::stop(commands::Command<commands::WriteCommand> command, catalogue::TransportCatalogue& catalogue) {
 	catalogue::parse_structs::Stop stop;
@@ -45,6 +45,18 @@ void string_parser::write::bus(commands::Command<commands::WriteCommand> command
 	while (std::getline(s2, trash, delim)) {
 		auto stop = &catalogue.GetStop(detail::DeleteSpace(trash));
 		bus.stops.push_back(stop);
+	}
+
+	for (size_t i = 1; i < bus.stops.size(); ++i) {
+		bus.route_length += catalogue.GetDistance(bus.stops.at(i - 1)->name, bus.stops.at(i)->name);
+		bus.direct_length += geo::ComputeDistance(bus.stops.at(i - 1)->coords, bus.stops.at(i)->coords);
+	}
+
+	if (bus.is_reverse) {
+		for (size_t i = bus.stops.size() - 1; i > 0; --i) {
+			bus.route_length += catalogue.GetDistance(bus.stops.at(i)->name, bus.stops.at(i - 1)->name);
+			bus.direct_length += geo::ComputeDistance(bus.stops.at(i)->coords, bus.stops.at(i - 1)->coords);
+		}
 	}
 	catalogue.AddBus(bus);
 }

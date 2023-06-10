@@ -43,18 +43,6 @@ namespace commands {
 }
 
 
-
-
-namespace detail {
-	std::string_view DeleteSpace(std::string_view input);
-
-	std::vector<std::string_view> SplitBy(std::string_view input, std::string_view del);
-
-	void ExecCommands(catalogue::TransportCatalogue& catalogue, const commands::Commands& commands);
-
-	void LoadString(catalogue::TransportCatalogue& catalogue, std::istream& input);
-}
-
 namespace catalogue {
 	namespace parse_structs {
 		struct Stop {
@@ -71,6 +59,9 @@ namespace catalogue {
 			bool is_reverse = false;
 			std::string name;
 			std::vector<const Stop*> stops;
+			size_t stops_count = 0;
+			double route_length = 0;
+			double direct_length = 0;
 		};
 
 		struct BusInfo {

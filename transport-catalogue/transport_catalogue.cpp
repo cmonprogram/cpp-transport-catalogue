@@ -48,20 +48,13 @@ namespace catalogue {
 			const parse_structs::Bus& bus = GetBus(name);
 			parse_structs::BusInfo bus_info;
 			bus_info.name = bus.name;
-			for (size_t i = 1; i < bus.stops.size(); ++i) {
-				bus_info.route_length += GetDistance(bus.stops.at(i - 1)->name, bus.stops.at(i)->name);
-				bus_info.direct_length += geo::ComputeDistance(bus.stops.at(i - 1)->coords, bus.stops.at(i)->coords);
-			}
-			bus_info.stops = bus.stops.size();
+			bus_info.route_length = bus.route_length;
+			bus_info.direct_length = bus.direct_length;
 
+			bus_info.stops = bus.stops.size();
 			if (bus.is_reverse) {
 				bus_info.stops += bus.stops.size() - 1;
-				for (size_t i = bus.stops.size() - 1; i > 0; --i) {
-					bus_info.route_length += GetDistance(bus.stops.at(i)->name, bus.stops.at(i - 1)->name);
-					bus_info.direct_length += geo::ComputeDistance(bus.stops.at(i)->coords, bus.stops.at(i - 1)->coords);
-				}
 			}
-
 			bus_info.unique_stops = std::set(bus.stops.begin(), bus.stops.end()).size();
 			return bus_info;
 		}
@@ -137,10 +130,10 @@ void detail::ExecCommands(catalogue::TransportCatalogue& catalogue, const comman
 	}
 	for (auto& command : commands.read) {
 		if (command.type == commands::ReadCommand::Stop) {
-			string_parser::read::stop(command, catalogue);
+			string_parser::read::stop(command, catalogue, std::cout);
 		}
 		if (command.type == commands::ReadCommand::Bus) {
-			string_parser::read::bus(command, catalogue);
+			string_parser::read::bus(command, catalogue, std::cout);
 		}
 
 	}
