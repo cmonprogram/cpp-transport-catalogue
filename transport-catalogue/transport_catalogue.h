@@ -9,81 +9,19 @@
 #include <algorithm>
 #include <sstream>
 
+#include "domain.h"
 #include "geo.h"
-#include "input_reader.h"
-#include "stat_reader.h"
+//#include "json.h"
+//#include "input_reader.h"
+//#include "request_handler.h"
+//#include "stat_reader.h"
 
 const int hash_num = 37;
 
-namespace catalogue {
-	class TransportCatalogue;
-}
-
-namespace commands {
-	enum class WriteCommand {
-		Bus,
-		Stop
-	};
-
-	enum class ReadCommand {
-		Bus,
-		Stop
-	};
-
-	template <typename CommandType>
-	struct Command {
-		std::string text;
-		CommandType type;
-	};
-
-	struct Commands {
-		std::vector<Command<WriteCommand>> write;
-		std::vector<Command<ReadCommand>> read;
-	};
-}
-
 
 namespace catalogue {
-	namespace parse_structs {
-		struct Stop {
-			Stop() = default;
-			Stop(const std::string& name, double latitude, double longitude) : name(name), coords(latitude, longitude) {}
-			std::string name;
-			geo::Coordinates coords;
-			//std::unordered_map<Stop*, int> distance;
-		};
-
-		struct Bus {
-			Bus() = default;
-			Bus(const std::string& name, const std::vector<const Stop*>& stops) : name(name), stops(stops) {}
-			bool is_reverse = false;
-			std::string name;
-			std::vector<const Stop*> stops;
-			size_t stops_count = 0;
-			double route_length = 0;
-			double direct_length = 0;
-		};
-
-		struct BusInfo {
-			bool is_found = true;
-			std::string_view name;
-			size_t stops = 0;
-			size_t unique_stops = 0;
-			double route_length = 0;
-			double direct_length = 0;
-		};
-		struct StopInfo {
-			bool is_found = true;
-			bool is_exist = true;
-			std::string_view name;
-			std::vector<const Bus*> buses;
-		};
-
-	}
-
 
 	class TransportCatalogue {
-		friend void detail::ExecCommands(catalogue::TransportCatalogue& catalogue, const commands::Commands& commands);
 	public:
 		const parse_structs::Stop& GetStop(std::string_view name) const;
 		double GetDistance(const std::string& stop_name_1, const std::string& stop_name_2) const;
@@ -91,7 +29,7 @@ namespace catalogue {
 		const parse_structs::Bus& GetBus(std::string_view name) const;
 		parse_structs::StopInfo GetStopInfo(std::string_view name) const;
 		parse_structs::BusInfo GetBusInfo(std::string_view name) const;
-
+		std::deque<parse_structs::Bus>& GetBusList();
 		void AddStop(parse_structs::Stop stop);
 		void AddBus(parse_structs::Bus bus);
 
@@ -111,4 +49,3 @@ namespace catalogue {
 		std::unordered_map<std::pair<std::string, std::string>, int, distance_view_hasher> distance_view;
 	};
 }
-

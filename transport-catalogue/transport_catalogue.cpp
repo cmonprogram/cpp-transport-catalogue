@@ -65,6 +65,10 @@ namespace catalogue {
 			return bus_info;
 		}
 	}
+	std::deque<parse_structs::Bus>& TransportCatalogue::GetBusList()
+	{
+		return bus_base;
+	}
 	void TransportCatalogue::AddStop(parse_structs::Stop stop) {
 		//void AddStop(const std::string& name, double latitude, double longitude) {
 		stop_base.push_back(std::move(stop));
