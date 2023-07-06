@@ -11,10 +11,6 @@
 
 #include "domain.h"
 #include "geo.h"
-//#include "json.h"
-//#include "input_reader.h"
-//#include "request_handler.h"
-//#include "stat_reader.h"
 
 const int hash_num = 37;
 

@@ -39,8 +39,3 @@ namespace detail {
 
 	void LoadJson(RequestHandler& handler, std::istream& input, std::ostream& output = std::cout);
 }
-
-/*
- * Здесь можно разместить код наполнения транспортного справочника данными из JSON,
- * а также код обработки запросов к базе и формирование массива ответов в формате JSON
- */

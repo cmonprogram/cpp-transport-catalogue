@@ -2,24 +2,6 @@
 #include "transport_catalogue.h"
 #include "map_renderer.h"
 #include "svg.h"
-
-/*
- * «десь можно было бы разместить код обработчика запросов к базе, содержащего логику, которую не
- * хотелось бы помещать ни в transport_catalogue, ни в json reader.
- *
- * ¬ качестве источника дл€ идей предлагаем взгл€нуть на нашу версию обработчика запросов.
- * ¬ы можете реализовать обработку запросов способом, который удобнее вам.
- *
- * ≈сли вы затрудн€етесь выбрать, что можно было бы поместить в этот файл,
- * можете оставить его пустым.
- */
-
- //  ласс RequestHandler играет роль ‘асада, упрощающего взаимодействие JSON reader-а
- // с другими подсистемами приложени€.
- // —м. паттерн проектировани€ ‘асад: https://ru.wikipedia.org/wiki/‘асад_(шаблон_проектировани€)
-
-
-
  class RequestHandler {
      struct SectionLoad {
          bool write_command = true;
@@ -48,18 +30,18 @@
 
      std::pair<svg::Text, svg::Text> prepare_bus_text(const svg::Point& point) const{
          auto settings = renderer_.GetSettings();
-         auto text1 = svg::Text().SetFillColor(settings.underlayer_color).SetStrokeColor(settings.underlayer_color).SetStrokeWidth(settings.underlayer_width).SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND).SetPosition(point).SetOffset(settings.bus_label_offset).SetFontSize(settings.bus_label_font_size).SetFontFamily("Verdana").SetFontWeight("bold")/*.SetData("114")*/ ;
+         auto text1 = svg::Text().SetFillColor(settings.underlayer_color).SetStrokeColor(settings.underlayer_color).SetStrokeWidth(settings.underlayer_width).SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND).SetPosition(point).SetOffset(settings.bus_label_offset).SetFontSize(settings.bus_label_font_size).SetFontFamily("Verdana").SetFontWeight("bold");
 
-         auto text2 = svg::Text()/*.SetFillColor("green")*/.SetPosition(point).SetOffset(settings.bus_label_offset).SetFontSize(settings.bus_label_font_size).SetFontFamily("Verdana").SetFontWeight("bold")/*.SetData("114")*/ ;
+         auto text2 = svg::Text().SetPosition(point).SetOffset(settings.bus_label_offset).SetFontSize(settings.bus_label_font_size).SetFontFamily("Verdana").SetFontWeight("bold") ;
 
          return { std::move(text1) , std::move(text2) };
      }
 
      std::pair<svg::Text, svg::Text> prepare_stop_text(const svg::Point& point) const {
          auto settings = renderer_.GetSettings();
-         auto text1 = svg::Text().SetFillColor(settings.underlayer_color).SetStrokeColor(settings.underlayer_color).SetStrokeWidth(settings.underlayer_width).SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND).SetPosition(point).SetOffset(settings.stop_label_offset).SetFontSize(settings.stop_label_font_size).SetFontFamily("Verdana")/*.SetData("114")*/;
+         auto text1 = svg::Text().SetFillColor(settings.underlayer_color).SetStrokeColor(settings.underlayer_color).SetStrokeWidth(settings.underlayer_width).SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND).SetPosition(point).SetOffset(settings.stop_label_offset).SetFontSize(settings.stop_label_font_size).SetFontFamily("Verdana");
 
-         auto text2 = svg::Text().SetFillColor("black").SetPosition(point).SetOffset(settings.stop_label_offset).SetFontSize(settings.stop_label_font_size).SetFontFamily("Verdana")/*.SetData("114")*/;
+         auto text2 = svg::Text().SetFillColor("black").SetPosition(point).SetOffset(settings.stop_label_offset).SetFontSize(settings.stop_label_font_size).SetFontFamily("Verdana");
 
          return { std::move(text1) , std::move(text2) };
      }

@@ -217,41 +217,4 @@ void detail::LoadJson(RequestHandler& handler, std::istream& input, std::ostream
 			result.PrintNode(output);
 		}
 	}
-
-
-
-
-
-	/*
-	* {
-	  "width": 1200.0,
-	  "height": 1200.0,
-
-	  "padding": 50.0,
-
-	  "line_width": 14.0,
-	  "stop_radius": 5.0,
-
-	  "bus_label_font_size": 20,
-	  "bus_label_offset": [7.0, 15.0],
-
-	  "stop_label_font_size": 20,
-	  "stop_label_offset": [7.0, -3.0],
-
-	  "underlayer_color": [255, 255, 255, 0.85],
-	  "underlayer_width": 3.0,
-
-	  "color_palette": [
-		"green",
-		[255, 160, 0],
-		"red"
-	  ]
-	}
-	*/
-
-
 }
-/*
- * Здесь можно разместить код наполнения транспортного справочника данными из JSON,
- * а также код обработки запросов к базе и формирование массива ответов в формате JSON
- */

@@ -102,35 +102,6 @@ namespace renderer {
         double underlayer_width = 0;
 
         std::vector<svg::Color> color_palette;
-
-        /*
-        {
-          "width": 1200.0,
-          "height": 1200.0,
-
-          "padding": 50.0,
-
-          "line_width": 14.0,
-          "stop_radius": 5.0,
-
-          "bus_label_font_size": 20,
-          "bus_label_offset": [7.0, 15.0],
-
-          "stop_label_font_size": 20,
-          "stop_label_offset": [7.0, -3.0],
-
-          "underlayer_color": [255, 255, 255, 0.85],
-          "underlayer_width": 3.0,
-
-          "color_palette": [
-            "green",
-            [255, 160, 0],
-            "red"
-          ]
-        }
-        */ 
-
-
     };
     class MapRenderer {
     public:
@@ -141,20 +112,7 @@ namespace renderer {
         RenderSettings& GetSettings() {
             return settings_;
         }
-        /*
-        template <typename PointInputIt>
-        void Render(PointInputIt points_begin, PointInputIt points_end) {
-            SphereProjector coords(points_begin, points_end, renderer_.settings_.width, settings_.height, settings_.padding);
-        }
-        */
-        /*
-        void SetInterval(const std::vector<geo::Coordinates>& geo_coords) {
-            coords_ = SphereProjector(geo_coords.begin(), geo_coords.end(), settings_.width, settings_.height, settings_.padding);
-        }
-        */
     private:
         RenderSettings settings_;
-        //Учитываем в этой задаче, что инициализировать SphereProjector нужно только теми остановками, которые входят хотя бы в один маршрут
-       // SphereProjector coords_;
     };
 }
