@@ -8,6 +8,7 @@
 #include <set>
 #include <algorithm>
 #include <sstream>
+#include <map>
 
 #include "domain.h"
 #include "geo.h"
@@ -22,7 +23,7 @@ namespace catalogue {
 		const parse_structs::Bus& GetBus(std::string_view name) const;
 		parse_structs::StopInfo GetStopInfo(std::string_view name) const;
 		parse_structs::BusInfo GetBusInfo(std::string_view name) const;
-		const std::deque<parse_structs::Bus>& GetBusList() const;
+		const std::map<std::string_view, const parse_structs::Bus*>& GetBusList() const;
 		void AddStop(parse_structs::Stop stop);
 		void AddBus(parse_structs::Bus bus);
 
@@ -31,7 +32,7 @@ namespace catalogue {
 		std::unordered_map<std::string_view, const parse_structs::Stop*> stop_name_view;
 
 		std::deque<parse_structs::Bus> bus_base;
-		std::unordered_map<std::string_view, const parse_structs::Bus*> bus_name_view;
+		std::map<std::string_view, const parse_structs::Bus*> bus_name_view;
 		std::unordered_map<std::string_view, std::unordered_set<const parse_structs::Bus*>> stop_bus_view;
 
 		struct distance_view_hasher {

@@ -88,10 +88,9 @@ namespace renderer {
     class MapRenderer {
     public:
         MapRenderer() = default;
-        void SetSettings(RenderSettings settings);
-        RenderSettings& GetSettings();
-        void FormMap(std::deque<catalogue::parse_structs::Bus> bus_list, std::ostream& out) const;
-        catalogue::parse_structs::Bus test;
+        void SetSettings(const RenderSettings& settings);
+        const RenderSettings& GetSettings();
+        void FormMap(const std::map<std::string_view, const catalogue::parse_structs::Bus*>& bus_list, std::ostream& out) const;
     private:
         std::pair<svg::Text, svg::Text> PrepareBusText(const svg::Point& point) const;
         std::pair<svg::Text, svg::Text> PrepareStopText(const svg::Point& point) const;
