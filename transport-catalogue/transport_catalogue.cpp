@@ -65,7 +65,7 @@ namespace catalogue {
 			return bus_info;
 		}
 	}
-	std::deque<parse_structs::Bus>& TransportCatalogue::GetBusList()
+	const std::deque<parse_structs::Bus>& TransportCatalogue::GetBusList() const
 	{
 		return bus_base;
 	}

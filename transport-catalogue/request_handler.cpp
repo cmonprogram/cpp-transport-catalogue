@@ -1,114 +1,122 @@
 #include "request_handler.h"
 #include <map>
-void RequestHandler::FormMap(std::ostream& out) const
+
+
+RequestHandler::RequestHandler(catalogue::TransportCatalogue& db, renderer::MapRenderer& renderer, std::ostream& output)
+	:db_(db), renderer_(renderer), output(output)
 {
-
-	svg::Document doc;
-
-	std::vector<svg::Polyline> lines;
-	std::vector<svg::Text> bus_texts;
-	std::map <std::string_view, svg::Circle> circles;
-	std::map <std::string_view, std::pair<svg::Text, svg::Text>> stop_texts;
-
-	auto settings = renderer_.GetSettings();
-	auto bus_list = db_.GetBusList();
-	auto& palette = settings.color_palette;
-	auto palette_value = palette.begin();
-
-	std::sort(bus_list.begin(), bus_list.end(), [](const auto& lhs, const auto& rhs) {
-		return lhs.name < rhs.name;
-		});
-
-	std::vector<geo::Coordinates> geo_coords;
-	for (const auto& bus : bus_list) {
-		for (const auto& stop : bus.stops) {
-			geo_coords.push_back(stop->coords);
-		}
-	}
-	SphereProjector coords(geo_coords.begin(), geo_coords.end(), settings.width, settings.height, settings.padding);
-	for (const auto& bus : bus_list) {
-		if (bus.stops.size() == 0) continue;
-		if (palette_value == palette.end()) palette_value = palette.begin();
-
-		//Lines
-		auto line = svg::Polyline();
-		for (const auto& stop : bus.stops) {
-			const svg::Point screen_coord = coords(stop->coords);
-			line.AddPoint(std::move(screen_coord));
-
-			if (!circles.count(stop->name)) {
-				//Circle
-				auto circle = svg::Circle().SetCenter(screen_coord).SetRadius(settings.stop_radius).SetFillColor("white");
-				circles.insert({ stop->name, std::move(circle) });
-			}
-			if (!stop_texts.count(stop->name)) {
-				//Stop Text
-				auto [text1, text2] = prepare_stop_text(coords(stop->coords));
-				text1.SetData(stop->name);
-				text2.SetData(stop->name);
-				stop_texts.insert({ stop->name, {std::move(text1), std::move(text2)}  });
-			}
-		}
-		if (!bus.is_roundtrip) {
-			for (auto iter = bus.stops.rbegin() + 1; iter != bus.stops.rend(); iter++) {
-				const svg::Point screen_coord = coords((*iter)->coords);
-				line.AddPoint(std::move(screen_coord));
-			}
-		}
-		line.SetStrokeColor(*palette_value).SetFillColor("none").SetStrokeWidth(settings.line_width).SetStrokeLineCap(svg::StrokeLineCap::ROUND).SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
-		lines.push_back(std::move(line));
-		//doc.Add(std::move(line));
-
-
-		//Bus Text
-		auto [text1, text2] = prepare_bus_text(coords(bus.stops.at(0)->coords));
-		text1.SetData(bus.name);
-		text2.SetFillColor(*palette_value).SetData(bus.name);
-		bus_texts.push_back(std::move(text1));
-		bus_texts.push_back(std::move(text2));
-
-		if (!bus.is_roundtrip && bus.stops.at(bus.stops.size() - 1) != bus.stops.at(0)) {
-			auto [text3, text4] = prepare_bus_text(coords(bus.stops.at(bus.stops.size() - 1)->coords));
-			text3.SetData(bus.name);
-			text4.SetFillColor(*palette_value).SetData(bus.name);
-			bus_texts.push_back(std::move(text3));
-			bus_texts.push_back(std::move(text4));
-		}
-		++palette_value;
-	}
-
-	for (auto& line : lines) {
-		doc.Add(std::move(line));
-	}
-	for (auto& text : bus_texts) {
-		doc.Add(std::move(text));
-	}
-
-	for (auto& circle : circles) {
-		doc.Add(std::move(circle.second));
-	}
-	for (auto& text : stop_texts) {
-		doc.Add(std::move(text.second.first));
-		doc.Add(std::move(text.second.second));
-	}
-
-	doc.Render(out);
-	//return std::move(doc);
-	//return doc;
-	//return svg::Document();
 }
 
-catalogue::TransportCatalogue& RequestHandler::GetCatalogue() {
-	return db_;
-}
+void RequestHandler::ExecuteCommands(commands::Commands commands) {
+	if (commands.render_settings.render_settings_load) {
+		renderer_.SetSettings(commands.render_settings.render_settings_comands);
+	}
 
-renderer::MapRenderer& RequestHandler::GetMap()
-{
-	return renderer_;
-}
+	if (commands.write_commands.write_command_load) {
+		for (const auto& stop_distance : commands.write_commands.stops) {
+			db_.AddStop(stop_distance.stop);
+			for (const auto& distance : stop_distance.distances) {
+				db_.SetDistance(stop_distance.stop.name, distance.destination_stop, distance.value);
+			}
+		}
+		for (const auto& bus_command : commands.write_commands.buses) {
+			catalogue::parse_structs::Bus bus;
+			bus.name = std::move(bus_command.name);
+			bus.is_roundtrip = bus_command.is_roundtrip;
+			bus.is_reverse = !bus.is_roundtrip;
 
-RequestHandler::RequestHandler(catalogue::TransportCatalogue& db, renderer::MapRenderer& renderer) : db_(db), renderer_(renderer)
-{
+			for (const auto& stop : bus_command.stops) {
+				bus.stops.push_back(&db_.GetStop(stop));
+			}
+
+			if (bus.stops.size() != 0) {
+				for (size_t i = 1; i < bus.stops.size(); ++i) {
+					bus.route_length += db_.GetDistance(bus.stops.at(i - 1)->name, bus.stops.at(i)->name);
+					bus.direct_length += geo::ComputeDistance(bus.stops.at(i - 1)->coords, bus.stops.at(i)->coords);
+				}
+
+				if (bus.is_reverse) {
+					for (size_t i = bus.stops.size() - 1; i > 0; --i) {
+						bus.route_length += db_.GetDistance(bus.stops.at(i)->name, bus.stops.at(i - 1)->name);
+						bus.direct_length += geo::ComputeDistance(bus.stops.at(i)->coords, bus.stops.at(i - 1)->coords);
+					}
+				}
+			}
+			db_.AddBus(bus);
+		}
+	}
+
+
+	if (commands.read_commands.read_command_load) {
+		json::Array arr;
+
+		for (const auto& command : commands.read_commands.commands) {
+			if (command.index() == 0) {
+				auto map_command = std::get<commands::ReadMapCommandInfo>(command);
+				std::stringstream ss;
+				renderer_.FormMap(db_.GetBusList(), ss);
+				std::string map_string = ss.str();
+
+				arr.emplace_back(std::map<std::string, json::Node>{
+					{ "map", map_string},
+					{ "request_id", map_command.request_id }
+				});
+			}
+			if (command.index() == 1) {
+				auto stop_command = std::get<commands::ReadStopCommandInfo>(command);
+					auto info = db_.GetStopInfo(stop_command.stop_name);
+					if (info.is_found) {
+						json::Array bus_names;
+						for (const catalogue::parse_structs::Bus* bus : info.buses) {
+							bus_names.emplace_back(bus->name);
+						}
+						arr.emplace_back(std::map<std::string, json::Node>{
+							{"buses", bus_names},
+							{ "request_id", stop_command.request_id }
+						});
+					}
+					else {
+						if (info.is_exist) {
+							arr.emplace_back(std::map<std::string, json::Node>{
+								{ "request_id", stop_command.request_id },
+								{ "buses", json::Array{} }
+							});
+						}
+						else {
+							arr.emplace_back(std::map<std::string, json::Node>{
+								{ "request_id", stop_command.request_id },
+								{ "error_message", (std::string)"not found" }
+							});
+						}
+
+					}
+				
+			}
+			if (command.index() == 2) {
+				auto bus_command = std::get<commands::ReadBusCommandInfo>(command);
+				auto info = db_.GetBusInfo(bus_command.bus_name);
+				if (info.is_found) {
+					arr.emplace_back(std::map<std::string, json::Node>{
+						{"curvature", info.route_length / info.direct_length},
+						{ "request_id", bus_command.request_id },
+						{ "route_length", info.route_length },
+						{ "stop_count", info.stops },
+						{ "unique_stop_count", info.unique_stops }
+					});
+				}
+				else {
+					arr.emplace_back(std::map<std::string, json::Node>{
+						{ "request_id", bus_command.request_id },
+						{ "error_message", (std::string)"not found" }
+					});
+				}
+			}
+		}
+		if (arr.size() > 0) {
+			json::Node result(arr);
+			result.PrintNode(output);
+		}
+	}
 }
 
 std::optional<catalogue::parse_structs::BusInfo> RequestHandler::GetBusStat(const std::string_view& bus_name) const

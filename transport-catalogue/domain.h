@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include "geo.h"
-
+#include "svg.h"
 
 namespace catalogue {
 	namespace parse_structs {
@@ -13,7 +13,6 @@ namespace catalogue {
 			geo::Coordinates coords;
 			//std::unordered_map<Stop*, int> distance;
 		};
-
 
 		struct Bus {
 			Bus() = default;
@@ -41,30 +40,85 @@ namespace catalogue {
 			std::string_view name;
 			std::vector<const Bus*> buses;
 		};
-
+		struct StopDistance {
+			std::string destination_stop;
+			int value;
+		};
 	}
 }
 
+namespace renderer {
+	struct RenderSettings {
+		double width = 0;
+		double height = 0;
+		double padding = 0;
+
+		double line_width = 0;
+		double stop_radius = 0;
+
+		double bus_label_font_size = 0;
+		svg::Point bus_label_offset;
+
+		double stop_label_font_size = 0;
+		svg::Point  stop_label_offset;
+
+		svg::Color underlayer_color;
+		double underlayer_width = 0;
+
+		std::vector<svg::Color> color_palette;
+	};
+}
+
 namespace commands {
-	enum class WriteCommand {
-		Bus,
-		Stop
+	struct WriteStopCommandInfo {
+		catalogue::parse_structs::Stop stop;
+		std::vector<catalogue::parse_structs::StopDistance> distances;
+	};
+	struct WriteBusCommandInfo {
+		bool is_roundtrip = false;
+		std::string name;
+		std::vector<std::string> stops;
 	};
 
-	enum class ReadCommand {
-		Bus,
-		Stop
+
+	struct ReadCommand {
+		int request_id;
 	};
 
-	template <typename CommandType>
-	struct Command {
-		std::string text;
-		CommandType type;
+	struct ReadMapCommandInfo : public ReadCommand {
 	};
+
+	struct ReadStopCommandInfo : public ReadCommand {
+		std::string stop_name;
+	};
+
+	struct ReadBusCommandInfo : public ReadCommand {
+		std::string bus_name;
+	};
+
+	
+
 
 	struct Commands {
-		std::vector<Command<WriteCommand>> write;
-		std::vector<Command<ReadCommand>> read;
-	};
+		struct RenderCommands {
+			renderer::RenderSettings render_settings_comands;
+			bool render_settings_load = true;
+		};
+		struct WriteCommands {
+			std::vector<WriteStopCommandInfo> stops;
+			std::vector<WriteBusCommandInfo> buses;
+			bool write_command_load = true;
+		};
 
+
+
+		struct ReadCommands {
+			std::vector<std::variant<ReadMapCommandInfo, ReadStopCommandInfo, ReadBusCommandInfo >> commands;
+			bool read_command_load = true;
+		};
+
+		RenderCommands render_settings;
+		WriteCommands write_commands;
+		ReadCommands read_commands;
+	};
 }

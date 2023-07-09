@@ -6,6 +6,7 @@
 int main() {
     catalogue::TransportCatalogue catalogue;
     renderer::MapRenderer map;
-    RequestHandler handler(catalogue, map);
-    detail::LoadJson(handler, std::cin);
+    RequestHandler handler(catalogue, map, std::cout);
+    JSONReader reader(std::cin);
+    handler.ExecuteCommands(reader.LoadJson());
 }

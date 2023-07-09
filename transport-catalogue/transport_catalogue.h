@@ -13,10 +13,7 @@
 #include "geo.h"
 
 const int hash_num = 37;
-
-
 namespace catalogue {
-
 	class TransportCatalogue {
 	public:
 		const parse_structs::Stop& GetStop(std::string_view name) const;
@@ -25,7 +22,7 @@ namespace catalogue {
 		const parse_structs::Bus& GetBus(std::string_view name) const;
 		parse_structs::StopInfo GetStopInfo(std::string_view name) const;
 		parse_structs::BusInfo GetBusInfo(std::string_view name) const;
-		std::deque<parse_structs::Bus>& GetBusList();
+		const std::deque<parse_structs::Bus>& GetBusList() const;
 		void AddStop(parse_structs::Stop stop);
 		void AddBus(parse_structs::Bus bus);
 

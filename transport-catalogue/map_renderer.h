@@ -1,12 +1,16 @@
 #pragma once
 #include "geo.h"
 #include "svg.h"
+#include "domain.h"
 
 #include <algorithm>
 #include <cstdlib>
 #include <iostream>
 #include <optional>
 #include <vector>
+#include <map>
+#include <deque>
+
 
 inline const double EPSILON = 1e-6;
 bool IsZero(double value);
@@ -80,39 +84,17 @@ private:
     double zoom_coeff_ = 0;
 };
 
-
-
-
 namespace renderer {
-    struct RenderSettings {
-        double width = 0;
-        double height = 0;
-        double padding = 0;
-
-        double line_width = 0;
-        double stop_radius = 0;
-
-        double bus_label_font_size = 0;
-        svg::Point bus_label_offset;
-
-        double stop_label_font_size = 0;
-        svg::Point  stop_label_offset;
-
-        svg::Color underlayer_color;
-        double underlayer_width = 0;
-
-        std::vector<svg::Color> color_palette;
-    };
     class MapRenderer {
     public:
         MapRenderer() = default;
-        void SetSettings(RenderSettings settings) {
-            settings_ = settings;
-        }
-        RenderSettings& GetSettings() {
-            return settings_;
-        }
+        void SetSettings(RenderSettings settings);
+        RenderSettings& GetSettings();
+        void FormMap(std::deque<catalogue::parse_structs::Bus> bus_list, std::ostream& out) const;
+        catalogue::parse_structs::Bus test;
     private:
+        std::pair<svg::Text, svg::Text> PrepareBusText(const svg::Point& point) const;
+        std::pair<svg::Text, svg::Text> PrepareStopText(const svg::Point& point) const;
         RenderSettings settings_;
     };
 }
