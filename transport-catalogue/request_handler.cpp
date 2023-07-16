@@ -79,7 +79,7 @@ void RequestHandler::ReadCommandsLoad(const commands::Commands::ReadCommands& co
 		}
 		if (arr.size() > 0) {
 			json::Node result(arr);
-			result.PrintNode(output);
+			json::Print(json::Document(result), output);
 		}
 	}
 }

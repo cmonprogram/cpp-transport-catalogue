@@ -14,7 +14,7 @@ public:
 	const std::vector<const catalogue::parse_structs::Bus*> GetBusesByStop(const std::string_view& stop_name) const;
 
 private:
-	// RequestHandler использует агрегацию объектов "Транспортный Справочник" и "Визуализатор Карты"
+	// RequestHandler РёСЃРїРѕР»СЊР·СѓРµС‚ Р°РіСЂРµРіР°С†РёСЋ РѕР±СЉРµРєС‚РѕРІ "РўСЂР°РЅСЃРїРѕСЂС‚РЅС‹Р№ РЎРїСЂР°РІРѕС‡РЅРёРє" Рё "Р’РёР·СѓР°Р»РёР·Р°С‚РѕСЂ РљР°СЂС‚С‹"
 	catalogue::TransportCatalogue& db_;
 	renderer::MapRenderer& renderer_;
 	//std::istream& input = std::cin;

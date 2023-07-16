@@ -56,9 +56,9 @@ commands::Commands JSONReader::LoadJson() {
 
 	auto document = json::Load(input);
 	auto& root = document.GetRoot();
-	auto& write_command = root.AsMap().at("base_requests").AsArray();
-	auto& read_command = root.AsMap().at("stat_requests").AsArray();
-	auto& render_settings = root.AsMap().at("render_settings").AsMap();
+	auto& write_command = root.AsDict().at("base_requests").AsArray();
+	auto& read_command = root.AsDict().at("stat_requests").AsArray();
+	auto& render_settings = root.AsDict().at("render_settings").AsDict();
 
 	if (commands.render_settings.render_settings_load) {
 		renderer::RenderSettings settings;
@@ -84,7 +84,7 @@ commands::Commands JSONReader::LoadJson() {
 
 	if (commands.write_commands.write_command_load) {
 		for (auto& command : write_command) {
-			auto& node = command.AsMap();
+			auto& node = command.AsDict();
 			if (node.at("type").AsString() == "Stop") {
 				catalogue::parse_structs::Stop stop;
 				stop.name = node.at("name").AsString();
@@ -95,7 +95,7 @@ commands::Commands JSONReader::LoadJson() {
 				stop_and_distances.stop = std::move(stop);
 
 				if (node.count("road_distances")) {
-					for (auto& [name, val] : node.at("road_distances").AsMap()) {
+					for (auto& [name, val] : node.at("road_distances").AsDict()) {
 						stop_and_distances.distances.push_back({ std::move(name), val.AsInt() });
 					}
 				}
@@ -118,7 +118,7 @@ commands::Commands JSONReader::LoadJson() {
 
 	if (commands.read_commands.read_command_load) {
 		for (auto& command : read_command) {
-			auto& node = command.AsMap();
+			auto& node = command.AsDict();
 			if (node.at("type").AsString() == "Stop") {
 				commands.read_commands.commands.push_back(commands::ReadStopCommandInfo{ node.at("id").AsInt(),std::move(node.at("name").AsString()) });
 			}

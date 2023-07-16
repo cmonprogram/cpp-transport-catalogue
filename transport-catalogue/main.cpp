@@ -1,4 +1,4 @@
-﻿#include <string>
+#include <string>
 #include "transport_catalogue.h"
 #include "request_handler.h"
 #include "json_reader.h"
