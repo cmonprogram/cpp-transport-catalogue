@@ -215,12 +215,21 @@ namespace json {
 			current->SetValue(input);
 			return *this;
 		}
+		
 		KeyContext Key(const std::string& input) {
 			OnCommand(Commands::Key);
 			current->SetKey(input);
 			return KeyContext(*this);
 		}
-
+		
+		/*
+		template<typename T = KeyContext>
+		T Key(const std::string& input) {
+			OnCommand(Commands::Key);
+			current->SetKey(input);
+			return T(*this);
+		}
+		*/
 
 		DictItemContext StartDict() {
 			OnCommand(Commands::StartDict);
@@ -310,44 +319,17 @@ namespace json {
 			};
 		};
 
-		class ValueValueContext : public BaseContext
-		{
-		public:
-			//После вызова StartArray и серии Value следует не Value, не StartDict, не StartArray и не EndArray.
-			ValueValueContext(Builder& builder) : BaseContext(builder) {};
-			//Builder& Value(json::Builder::ValueType input) = delete;
-			Builder& Key(std::string input) = delete;
-			//Builder& StartArray() = delete;
-			//Builder& EndArray() = delete;
-			//Builder& StartDict() = delete;
-			Builder& EndDict() = delete;
-			Builder& Build() = delete;
-		};
-
-		class ArrayValueContext : public BaseContext
-		{
-		public:
-			ArrayValueContext(Builder& builder) : BaseContext(builder) {};
-			ValueValueContext Value(json::Builder::ValueType input) {
-				builder_.Value(input);
-				return ValueValueContext(builder_);
-			};
-			Builder& Key(std::string input) = delete;
-			//Builder& StartArray() = delete;
-			//Builder& EndArray() = delete;
-			//Builder& StartDict() = delete;
-			Builder& EndDict() = delete;
-			Builder& Build() = delete;
-		};
-
+		
 		class ArrayItemContext : public BaseContext
 		{
 		public:
+			//4,5 За вызовом StartArray следует не Value, не StartDict, не StartArray и не EndArray.
 			ArrayItemContext(Builder& builder) : BaseContext(builder) {};
-			ArrayValueContext Value(json::Builder::ValueType input) {
+			ArrayItemContext Value(json::Builder::ValueType input) {
 				builder_.Value(input);
-				return ArrayValueContext(builder_);
+				return ArrayItemContext(builder_);
 			};
+
 			Builder& Key(std::string input) = delete;
 			//Builder& StartArray() = delete;
 			//Builder& EndArray() = delete;
@@ -359,7 +341,7 @@ namespace json {
 		class DictItemContext : public BaseContext
 		{
 		public:
-			//DictItemContext удалены следующие методы: Build, Value, EndArray, StartDict и StartArray.
+			//3. За вызовом StartDict следует не Key и не EndDict.
 			DictItemContext(Builder& builder) : BaseContext(builder) {};
 			Builder& Value(json::Builder::ValueType input) = delete;
 			//Builder& Key(std::string input) = delete;
@@ -369,11 +351,11 @@ namespace json {
 			//Builder& EndDict() = delete;
 			Builder& Build() = delete;
 		};
-
+		
 		class ValueKeyContext : public BaseContext
 		{
 		public:
-			//Непосредственно после Key вызван не Value, не StartDict и не StartArray.
+			//2. После вызова Value, последовавшего за вызовом Key, вызван не Key и не EndDict.
 			ValueKeyContext(Builder& builder) : BaseContext(builder) {};
 			Builder& Value(json::Builder::ValueType input) = delete;
 			//Builder& Key(std::string input) = delete;
@@ -384,12 +366,10 @@ namespace json {
 			Builder& Build() = delete;
 		};
 
-
-
 		class KeyContext : public BaseContext
 		{
 		public:
-			//Непосредственно после Key вызван не Value, не StartDict и не StartArray.
+			//1. Непосредственно после Key вызван не Value, не StartDict и не StartArray.
 			KeyContext(Builder& builder) : BaseContext(builder) {};
 			ValueKeyContext Value(json::Builder::ValueType input) {
 				builder_.Value(input);
@@ -407,4 +387,3 @@ namespace json {
 
 	};
 }
-
