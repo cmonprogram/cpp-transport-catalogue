@@ -7,9 +7,6 @@
 #include <map>
 
 namespace json {
-
-
-
 	class Builder {
 	public:
 		using KeyType = std::string;
@@ -382,8 +379,5 @@ namespace json {
 			Builder& EndDict() = delete;
 			Builder& Build() = delete;
 		};
-
-
-
 	};
 }
