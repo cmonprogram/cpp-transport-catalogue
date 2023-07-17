@@ -1,9 +1,9 @@
+#pragma once
 #include "json.h"
 #include <vector>
 #include <deque>
 #include <optional>
 #include <memory>
-#include <list>
 #include <map>
 
 namespace json {
@@ -27,53 +27,14 @@ namespace json {
 			NodeListElem* next = nullptr;
 			std::vector<NodeListElem*> arrys;
 
-			~NodeListElem() {
-				for (NodeListElem* elem : arrys) {
-					delete elem;
-				}
-			}
+			~NodeListElem();
 
-			void MakeNextNode(const ValueType& input) {
-				next = new NodeListElem();
-				next->prev = this;
-				next->node = Node(input);
-				arrys.push_back(next);
-				//return list_elem;
-			}
+			void MakeNextNode(const ValueType& input);
 
-			NodeListElem& operator=(const NodeListElem& input) {
-				key = input.key;
-				node = input.node;
-				prev = input.prev;
-				return *this;
-			}
-
-			void Clear() {
-				key = std::nullopt;
-				//value = std::nullopt;
-			}
-			void SetKey(const KeyType& input) {
-				key = input;
-			}
-
-			void SetValue(const ValueType& input) {
-				//*value = input;
-				if (node.has_value() && node.value().IsArray()) {
-					node.value().AsArray().push_back(input);
-				}
-				else if (node.has_value() && node.value().IsDict()) {
-					auto test = node.value().AsDict();
-					node.value().AsDict().insert({ *key, input });
-					Clear();
-				}
-				else {
-					node = Node(input);
-				}
-			}
-
-			bool Empty() {
-				return !node.has_value();
-			}
+			void Clear();
+			void SetKey(const KeyType& input);
+			void SetValue(const ValueType& input);
+			bool Empty();
 		};
 		NodeListElem* root;
 		NodeListElem* current;
@@ -89,46 +50,10 @@ namespace json {
 		};
 
 		std::vector<Commands> command_log;
-
-		std::map<Commands, int> CommandsStat() {
-			std::map<Commands, int> commands;
-			for (Commands command : command_log) {
-				++commands[command];
-			}
-			return commands;
-		}
-
-		bool ArrayDicCheck() {
-			std::map<Commands, int> commands = CommandsStat();
-			if (command_log.size()) {
-				if (commands[Commands::StartArray] != commands[Commands::EndArray]) return false;
-				if (commands[Commands::StartDict] != commands[Commands::EndDict]) return false;
-			}
-			return true;
-		}
-
-		bool ObjIsReady() {
-			bool t1 = !root->Empty();
-			bool t2 = current == root;
-			bool t3 = !current->key.has_value();
-			bool t4 = true;
-			if (command_log.size()) {
-				t4 = ArrayDicCheck();
-			}
-			else {
-				t4 = false;
-			}
-
-			return t1 && t2 && t3 && t4;
-		}
-
-		bool CheckValStart() {
-			//Вызов Value, StartDict или StartArray где-либо, кроме как после конструктора, после Key или после предыдущего элемента массив
-			bool t1 = command_log.size() == 0;
-			bool t2 = command_log.size() > 0 && command_log.at(command_log.size() - 1) == Commands::Key;
-			bool t3 = command_log.size() > 0 && current->node.has_value() && current->node.value().IsArray();
-			return t1 || t2 || t3;
-		}
+		std::map<Commands, int> CommandsStat();
+		bool ArrayDicCheck();
+		bool ObjIsReady();
+		bool CheckValStart();
 
 		bool CheckKey() {
 			//std::logic_error при вызове метода Key снаружи словаря или сразу после другого Key.
@@ -137,148 +62,19 @@ namespace json {
 			bool t3 = command_log.size() > 0 && command_log.at(command_log.size() - 1) != Commands::Key;
 			return t1 && t2 && t3;
 		}
-
-		void OnCommand(Commands command) {
-			if (command == Commands::Key) {
-				if (!CheckKey()) {
-					throw std::logic_error("Wrong key");
-				}
-				if (ObjIsReady()) {
-					throw std::logic_error("Wrong root");
-				}
-			}
-			else if (command == Commands::Value) {
-				if (!CheckValStart()) {
-					throw std::logic_error("Wrong Value");
-				}
-
-				if (ObjIsReady()) {
-					throw std::logic_error("Wrong root");
-				}
-			}
-			else if (command == Commands::StartDict) {
-				if (!CheckValStart()) {
-					throw std::logic_error("Wrong StartDict");
-				}
-
-				if (ObjIsReady()) {
-					throw std::logic_error("Wrong root");
-				}
-			}
-			else if (command == Commands::EndDict) {
-				if (ObjIsReady()) {
-					throw std::logic_error("Wrong root");
-				}
-				if (!current->node.value().IsDict()) {
-					throw std::logic_error("Wrong EndDict");
-				}
-			}
-			else if (command == Commands::StartArray) {
-				if (!CheckValStart()) {
-					throw std::logic_error("Wrong StartDict");
-				}
-
-				if (ObjIsReady()) {
-					throw std::logic_error("Wrong root");
-				}
-			}
-			else if (command == Commands::EndArray) {
-				if (ObjIsReady()) {
-					throw std::logic_error("Wrong root");
-				}
-				if (!current->node.value().IsArray()) {
-					throw std::logic_error("Wrong EndArray");
-				}
-			}
-			else if (command == Commands::Build) {
-				if (!ObjIsReady()) {
-					throw std::logic_error("Wrong root");
-				}
-			}
-			command_log.push_back(command);
-		}
+		void OnCommand(Commands command);
 	public:
-		Builder() {
-			root = new NodeListElem();
-			current = root;
-		}
-		~Builder() {
-			delete root;
-		}
+		Builder();
+		~Builder();
 
 
-		Builder& Value(const std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string> input) {
-			OnCommand(Commands::Value);
-			current->SetValue(input);
-			return *this;
-		}
-		
-		KeyContext Key(const std::string& input) {
-			OnCommand(Commands::Key);
-			current->SetKey(input);
-			return KeyContext(*this);
-		}
-		
-		/*
-		template<typename T = KeyContext>
-		T Key(const std::string& input) {
-			OnCommand(Commands::Key);
-			current->SetKey(input);
-			return T(*this);
-		}
-		*/
-
-		DictItemContext StartDict() {
-			OnCommand(Commands::StartDict);
-			if (root->Empty()) {
-				root->SetValue(Dict());
-			}
-			else {
-				current->MakeNextNode(Dict());
-				auto ptr = current->next;
-				current = ptr;
-			}
-			return DictItemContext(*this);
-		}
-
-		ArrayItemContext StartArray() {
-			OnCommand(Commands::StartArray);
-			if (root->Empty()) {
-				root->SetValue(Array());
-			}
-			else {
-				current->MakeNextNode(Array());
-				auto ptr = current->next;
-				current = ptr;
-			}
-			return ArrayItemContext(*this);
-		}
-
-		Builder& EndDict() {
-			OnCommand(Commands::EndDict);
-			if (current->prev) {
-				current->prev->SetValue(current->node.value().AsDict());
-				current = current->prev;
-			}
-			return *this;
-		}
-
-
-		Builder& EndArray() {
-			OnCommand(Commands::EndArray);
-			if (current->prev) {
-				current->prev->SetValue(current->node.value().AsArray());
-				current = current->prev;
-			}
-			return *this;
-		}
-
-		Document Build() {
-			OnCommand(Commands::Build);
-			Document doc(root->node.value());
-			return doc;
-		}
-
+		Builder& Value(const std::variant<std::nullptr_t, Array, Dict, bool, int, double, std::string> input);
+		KeyContext Key(const std::string& input);
+		DictItemContext StartDict();
+		ArrayItemContext StartArray();
+		Builder& EndDict();
+		Builder& EndArray();
+		Document Build();
 
 
 		class BaseContext {
@@ -316,7 +112,6 @@ namespace json {
 			};
 		};
 
-		
 		class ArrayItemContext : public BaseContext
 		{
 		public:
@@ -348,7 +143,7 @@ namespace json {
 			//Builder& EndDict() = delete;
 			Builder& Build() = delete;
 		};
-		
+
 		class ValueKeyContext : public BaseContext
 		{
 		public:
