@@ -34,7 +34,6 @@ std::vector<std::string_view> detail::SplitBy(std::string_view input, std::strin
 }
 
 svg::Color detail::SetColor(json::Node node) {
-
 	if (node.IsArray()) {
 		auto& arr = node.AsArray();
 		if (arr.size() == 3) {
@@ -59,8 +58,12 @@ commands::Commands JSONReader::LoadJson() {
 	auto& write_command = root.AsDict().at("base_requests").AsArray();
 	auto& read_command = root.AsDict().at("stat_requests").AsArray();
 	auto& render_settings = root.AsDict().at("render_settings").AsDict();
-
-	if (commands.render_settings.render_settings_load) {
+	auto& routing_settings = root.AsDict().at("routing_settings").AsDict();
+	if (commands.routing_settings.is_load) {
+		commands.routing_settings.router_settings_comands.bus_wait_time = routing_settings.at("bus_wait_time").AsInt();
+		commands.routing_settings.router_settings_comands.bus_velocity = routing_settings.at("bus_velocity").AsDouble();
+	}
+	if (commands.render_settings.is_load) {
 		renderer::RenderSettings settings;
 
 		settings.width = render_settings.at("width").AsDouble();
@@ -82,7 +85,7 @@ commands::Commands JSONReader::LoadJson() {
 		commands.render_settings.render_settings_comands = std::move(settings);
 	}
 
-	if (commands.write_commands.write_command_load) {
+	if (commands.write_commands.is_load) {
 		for (auto& command : write_command) {
 			auto& node = command.AsDict();
 			if (node.at("type").AsString() == "Stop") {
@@ -116,19 +119,27 @@ commands::Commands JSONReader::LoadJson() {
 		}
 	}
 
-	if (commands.read_commands.read_command_load) {
+	if (commands.read_commands.is_load) {
 		for (auto& command : read_command) {
 			auto& node = command.AsDict();
 			if (node.at("type").AsString() == "Stop") {
-				commands.read_commands.commands.push_back(commands::ReadStopCommandInfo{ node.at("id").AsInt(),std::move(node.at("name").AsString()) });
+				commands.read_commands.commands.push_back(commands::ReadStopCommandInfo{ node.at("id").AsInt(), std::move(node.at("name").AsString()) });
 			}
 
 			if (node.at("type").AsString() == "Bus") {
-				commands.read_commands.commands.push_back(commands::ReadBusCommandInfo{ node.at("id").AsInt(),std::move(node.at("name").AsString()) });
+				commands.read_commands.commands.push_back(commands::ReadBusCommandInfo{ node.at("id").AsInt(), std::move(node.at("name").AsString()) });
 			}
 
 			if (node.at("type").AsString() == "Map") {
 				commands.read_commands.commands.push_back(commands::ReadMapCommandInfo{ node.at("id").AsInt() });
+			}
+
+			if (node.at("type").AsString() == "Route") {
+				commands.read_commands.commands.push_back(commands::ReadRouteCommandInfo{ 
+					node.at("id").AsInt(), 
+					node.at("from").AsString(),
+					node.at("to").AsString()
+				});
 			}
 		}
 

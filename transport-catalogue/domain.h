@@ -9,6 +9,7 @@ namespace catalogue {
 		struct Stop {
 			Stop() = default;
 			Stop(const std::string& name, double latitude, double longitude) : name(name), coords(latitude, longitude) {}
+			size_t id = 0;
 			std::string name;
 			geo::Coordinates coords;
 			//std::unordered_map<Stop*, int> distance;
@@ -69,6 +70,13 @@ namespace renderer {
 	};
 }
 
+namespace router {
+	struct TransportRouterSettings {
+		int bus_wait_time = 0;
+		double bus_velocity = 0;
+	};
+}
+
 namespace commands {
 	struct WriteStopCommandInfo {
 		catalogue::parse_structs::Stop stop;
@@ -79,7 +87,6 @@ namespace commands {
 		std::string name;
 		std::vector<std::string> stops;
 	};
-
 
 	struct ReadCommand {
 		int request_id;
@@ -96,27 +103,34 @@ namespace commands {
 		std::string bus_name;
 	};
 
-	
+	struct ReadRouteCommandInfo : public ReadCommand {
+		std::string from;
+		std::string to;
+	};
 
 
 	struct Commands {
-		struct RenderCommands {
-			renderer::RenderSettings render_settings_comands;
-			bool render_settings_load = true;
+		struct Command {
+			bool is_load = true;
 		};
-		struct WriteCommands {
+
+		struct RoutingCommands : public Command {
+			router::TransportRouterSettings router_settings_comands;
+		};
+
+		struct RenderCommands : public Command {
+			renderer::RenderSettings render_settings_comands;
+		};
+
+		struct WriteCommands : public Command  {
 			std::vector<WriteStopCommandInfo> stops;
 			std::vector<WriteBusCommandInfo> buses;
-			bool write_command_load = true;
+		};
+		struct ReadCommands : public Command {
+			std::vector<std::variant<ReadMapCommandInfo, ReadStopCommandInfo, ReadBusCommandInfo, ReadRouteCommandInfo >> commands;
 		};
 
-
-
-		struct ReadCommands {
-			std::vector<std::variant<ReadMapCommandInfo, ReadStopCommandInfo, ReadBusCommandInfo >> commands;
-			bool read_command_load = true;
-		};
-
+		RoutingCommands routing_settings;
 		RenderCommands render_settings;
 		WriteCommands write_commands;
 		ReadCommands read_commands;

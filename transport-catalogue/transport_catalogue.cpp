@@ -6,6 +6,11 @@ namespace catalogue {
 		if (!stop_name_view.count(name)) throw std::out_of_range("Not Found");
 		return *(stop_name_view.at(name));
 	}
+	const parse_structs::Stop& TransportCatalogue::GetStopById(size_t id) const
+	{
+		if (!stop_id_view.count(id)) throw std::out_of_range("Not Found");
+		return *(stop_id_view.at(id));
+	}
 	double TransportCatalogue::GetDistance(const std::string& stop_name_1, const std::string& stop_name_2) const {
 		auto item = distance_view.find({ stop_name_1, stop_name_2 });
 		if (item == distance_view.end()) {
@@ -17,6 +22,10 @@ namespace catalogue {
 		else {
 			return geo::ComputeDistance(stop_name_view.at(stop_name_1)->coords, stop_name_view.at(stop_name_2)->coords);
 		}
+	}
+	const TransportCatalogue::DintanceViewType& TransportCatalogue::GetDistanceView() const
+	{
+		return distance_view;
 	}
 	void TransportCatalogue::SetDistance(const std::string& stop_name_1, const std::string& stop_name_2, int value) {
 		distance_view.insert({ { stop_name_1, stop_name_2 }, value });
@@ -71,9 +80,11 @@ namespace catalogue {
 	}
 	void TransportCatalogue::AddStop(parse_structs::Stop stop) {
 		//void AddStop(const std::string& name, double latitude, double longitude) {
+		stop.id = stop_base.size();
 		stop_base.push_back(std::move(stop));
 		auto& stop_added = stop_base.back();
 		stop_name_view[stop_added.name] = &stop_added;
+		stop_id_view[stop_added.id] = &stop_added;
 		//return &stop_added;
 	}
 	void TransportCatalogue::AddBus(parse_structs::Bus bus) {
